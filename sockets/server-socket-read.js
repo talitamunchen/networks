@@ -1,27 +1,50 @@
 var fs = require("fs");
 var net = require('net');
 
-var server = net.createServer(function(socket){
-    console.log('Client connected');
-	fs.readFile("./trabalho.txt", "utf8", function (err, data){
-		if (err){
-		    return console.log(err); //error
-		}
-		socket.write(data);
+var getFileName = function(data){
+	var headers = data.split("\n");
+	var recParts = headers[0].split(" ");
+	//console.log(headers);
+	//console.log("Request: " + recParts[1]);
+	return recParts[1];
+}
 
-		socket.destroy();
-		server.close(function () {
-			console.log('Server closed.');
-			server.unref();
-		});
+var sendHeader = function(clientSocket, statusCode){
+	if(statusCode == 200){
+		clientSocket.write("HTTP/1.1 200 OK\r\n");
+	}else if (statusCode == 404){
+		clientSocket.write("HTTP/1.1 404 NOT FOUND\r\n");
+	}
+	clientSocket.write("Server: Talita/1.0.0 (WIN10)\r\n");
+	clientSocket.write("Connection: close\r\n");
+	clientSocket.write("Content-Type: text/html; charset=UTF-8\r\n");
+	clientSocket.write("\r\n");
+}
+
+var sendNotFound = function(clientSocket){
+	fs.readFile("./notFound.html", "utf8", function (err, data){	
+		sendHeader(clientSocket, 404);
+		clientSocket.write(data);
+		clientSocket.destroy();
 	});
+}
 
-   /* socket.on('end', function(){
-        console.log('Cliend desconected');
+var server = net.createServer(function(clientSocket){
+    console.log('Client connected');
+
+    clientSocket.on('data', function(data){
+        //console.log('Client sent: ' + data.toString());
+		var fileName = getFileName(data.toString());
+		fs.readFile("." + fileName, "utf8", function (err, fileData){
+			if (err){
+				sendNotFound(clientSocket);
+				return console.log(err); //error
+			}
+			sendHeader(clientSocket, 200);
+			clientSocket.write(fileData);
+			clientSocket.destroy();
+		});
     });
-    socket.on('data', function(data){
-        console.log('Client send: ' + data.toString());
-    });*/
 });
 
 server.listen(8080, '127.0.0.1');
