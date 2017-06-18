@@ -17,7 +17,7 @@ var sendHeader = function(clientSocket, statusCode){
 	}
 	clientSocket.write("Server: Talita/1.0.0 (WIN10)\r\n");
 	clientSocket.write("Connection: close\r\n");
-	clientSocket.write("Content-Type: text/html; charset=UTF-8\r\n");
+	//clientSocket.write("Content-Type: image/jpeg;\r\n");
 	clientSocket.write("\r\n");
 }
 
@@ -35,7 +35,7 @@ var server = net.createServer(function(clientSocket){
     clientSocket.on('data', function(data){
         //console.log('Client sent: ' + data.toString());
 		var fileName = getFileName(data.toString());
-		fs.readFile("." + fileName, "utf8", function (err, fileData){
+		fs.readFile("." + fileName, function (err, fileData){
 			if (err){
 				sendNotFound(clientSocket);
 				return console.log(err); //error
